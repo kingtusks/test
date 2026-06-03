@@ -1,3 +1,4 @@
 .env
 .gide/
 .venv/
+__pycache__/

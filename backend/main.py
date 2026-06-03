@@ -235,7 +235,7 @@ def get_secret(secret_id: str) -> dict:
         raise HTTPException(404, "secret not found")
 
 
-@app.delete(f"{API}/secrets/{secret_id}", status_code=204)
+@app.delete(f"{API}/secrets/{{secret_id}}", status_code=204)
 def delete_secret(secret_id: str) -> JSONResponse:
     try:
         vault.delete_secret(secret_id)
