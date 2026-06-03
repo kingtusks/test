@@ -36,6 +36,11 @@ async function decryptSecret(b64, password) {
   return new TextDecoder().decode(dec);
 }
 
+// ─── FA Icon component ───
+function FaIcon({ icon, style }) {
+  return <i className={icon} style={{ fontSize: 22, color: "#00ffaa", ...style }} />;
+}
+
 // ─── Animated background particles ───
 function VaultParticles() {
   const canvasRef = useRef(null);
@@ -60,7 +65,6 @@ function VaultParticles() {
         ctx.fillStyle = "rgba(0,255,170,0.15)";
         ctx.fill();
       });
-      // lines
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -118,6 +122,7 @@ export default function SecretsVault() {
     <div style={styles.root}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
         @keyframes fadeUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
         @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
         @keyframes slideIn { from { opacity:0; transform:translateX(-12px) } to { opacity:1; transform:translateX(0) } }
@@ -145,14 +150,10 @@ function Nav({ tab, setTab }) {
       <div style={styles.navInner}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={styles.logoMark}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="11" width="18" height="11" rx="2" stroke="#00ffaa" strokeWidth="1.5" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#00ffaa" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="12" cy="16" r="1.5" fill="#00ffaa" />
-            </svg>
+            <i className="fa-solid fa-vault" style={{ fontSize: 16, color: "#00ffaa" }} />
           </div>
           <span style={styles.logoText}>Secrets Vault</span>
-          <span style={styles.badge}>by GIDE × GNOMI</span>
+          <span style={styles.badge}>by GIDE</span>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {["home", "demo", "docs", "about"].map(t => (
@@ -186,15 +187,14 @@ function HomePage({ setTab }) {
             <span style={styles.heroAccent}>on your machine.</span>
           </h1>
           <p style={styles.heroSub}>
-            AES-256-GCM encryption powered by Web Crypto API. Nothing leaves your browser — ever. 
-            Verify it yourself with our live network monitor.
+            The strongest encryption available, running entirely on your device. Zero servers. Zero network calls. And a live monitor that lets you prove it.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 36 }}>
             <button onClick={() => setTab("demo")} style={styles.ctaPrimary}>
-              Try Live Demo →
+              Try Live Demo <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6, fontSize: 12 }} />
             </button>
             <button onClick={() => setTab("docs")} style={styles.ctaSecondary}>
-              Read the Docs
+              <i className="fa-solid fa-book" style={{ marginRight: 6, fontSize: 12 }} /> Read the Docs
             </button>
           </div>
         </div>
@@ -206,15 +206,17 @@ function HomePage({ setTab }) {
         <h2 style={styles.sectionTitle}>Privacy isn't a feature.<br />It's the architecture.</h2>
         <div style={styles.featureGrid}>
           {[
-            { icon: "🔐", title: "AES-256-GCM", desc: "Military-grade encryption via the Web Crypto API. PBKDF2 key derivation with 100,000 iterations and random salts." },
-            { icon: "📡", title: "Zero Outbound Traffic", desc: "Open DevTools → Network tab. Encrypt a secret. Watch nothing happen. That's the whole point." },
-            { icon: "🧪", title: "Verifiable by Design", desc: "Every cryptographic operation happens in your browser's JavaScript runtime. View source, inspect, verify." },
-            { icon: "🏗️", title: "No Backend Required", desc: "No servers, no databases, no APIs, no cookies, no tracking. Static HTML that runs anywhere." },
-            { icon: "🔑", title: "Key Never Stored", desc: "Your passphrase exists only in memory during the operation. It's never written to disk or transmitted." },
-            { icon: "🌍", title: "GNOMI Brand Aligned", desc: "Built on the same transparency-first ethos that powers GNOMI's commitment to information freedom." }
+            { icon: "fa-solid fa-shield-halved", title: "Bank-Level Encryption", desc: "The same encryption banks use to protect your money. Your secret gets scrambled into unreadable code that only your passphrase can unlock." },
+            { icon: "fa-solid fa-tower-broadcast", title: "Nothing Ever Leaves", desc: "Your secret never touches the internet. No data is sent anywhere. It stays on your screen, on your device, period." },
+            { icon: "fa-solid fa-flask-vial", title: "Verifiable by Design", desc: "Don't take our word for it. You can check it yourself. Open your browser, watch the network activity, and see with your own eyes that nothing is being transmitted." },
+            { icon: "fa-solid fa-server", title: "No Backend Required", desc: "No servers, no databases, no APIs, no cookies, no tracking. Static HTML that runs anywhere." },
+            { icon: "fa-solid fa-key", title: "Key Never Stored", desc: "Your passphrase exists only in memory during the operation. It's never written to disk or transmitted." },
+            { icon: "fa-solid fa-code", title: "Made for Those Who Code", desc: "To every developer pushing code around the globe: this vault turns your local browser into an impenetrable, offline fortress." }
           ].map((f, i) => (
             <div key={i} style={{ ...styles.featureCard, animationDelay: `${i * 0.1}s` }}>
-              <div style={styles.featureIcon}>{f.icon}</div>
+              <div style={styles.featureIcon}>
+                <FaIcon icon={f.icon} />
+              </div>
               <h3 style={styles.featureTitle}>{f.title}</h3>
               <p style={styles.featureDesc}>{f.desc}</p>
             </div>
@@ -228,12 +230,15 @@ function HomePage({ setTab }) {
         <h2 style={styles.sectionTitle}>Three steps. Zero trust required.</h2>
         <div style={{ display: "flex", gap: 24, maxWidth: 800, margin: "48px auto 0", flexWrap: "wrap", justifyContent: "center" }}>
           {[
-            { step: "01", title: "Enter your secret", desc: "Type or paste any sensitive value — API keys, passwords, tokens, connection strings." },
-            { step: "02", title: "Set a passphrase", desc: "Choose a strong passphrase. It's used to derive a unique AES-256 key via PBKDF2." },
-            { step: "03", title: "Encrypt & verify", desc: "Your secret is encrypted locally. The network monitor confirms zero outbound requests." }
+            { step: "01", icon: "fa-solid fa-pen-to-square", title: "Enter your secret", desc: "Type or paste any sensitive value — API keys, passwords, tokens, connection strings." },
+            { step: "02", icon: "fa-solid fa-lock", title: "Set a passphrase", desc: "Type a secret, pick a passphrase, and watch it get encrypted — without a single byte leaving your browser." },
+            { step: "03", icon: "fa-solid fa-circle-check", title: "Encrypt & verify", desc: "Your secret is encrypted locally. The network monitor confirms zero outbound requests." }
           ].map((s, i) => (
             <div key={i} style={styles.stepCard}>
-              <div style={styles.stepNum}>{s.step}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={styles.stepNum}>{s.step}</div>
+                <i className={s.icon} style={{ fontSize: 16, color: "#00ffaa"}} />
+              </div>
               <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, color: "#eee", marginBottom: 8 }}>{s.title}</h3>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#666", lineHeight: 1.6 }}>{s.desc}</p>
             </div>
@@ -250,7 +255,9 @@ function HomePage({ setTab }) {
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#666", maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.6 }}>
           Open the demo, open your browser's Network tab, and watch. Privacy claims are cheap. Proof is everything.
         </p>
-        <button onClick={() => setTab("demo")} style={styles.ctaPrimary}>Launch the Vault →</button>
+        <button onClick={() => setTab("demo")} style={styles.ctaPrimary}>
+          Launch the Vault <i className="fa-solid fa-arrow-right" style={{ marginLeft: 6, fontSize: 12 }} />
+        </button>
       </section>
 
       <Footer />
@@ -288,7 +295,7 @@ function DemoPage() {
       addEvent("✓ Encryption complete — " + result.length + " chars of ciphertext");
       addEvent("✓ Network requests during operation: 0");
       setOutput(result);
-    } catch {
+    } catch (err) {
       setError("Encryption failed");
       addEvent("✗ Encryption error");
     }
@@ -307,7 +314,7 @@ function DemoPage() {
       addEvent("✓ Decryption successful — plaintext recovered");
       addEvent("✓ Network requests during operation: 0");
       setOutput(result);
-    } catch {
+    } catch (err) {
       setError("Decryption failed — wrong passphrase or corrupted data");
       addEvent("✗ Decryption failed — authentication tag mismatch");
     }
@@ -328,13 +335,19 @@ function DemoPage() {
           <div style={styles.demoCard}>
             {/* Mode toggle */}
             <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#0a0a0a", borderRadius: 8, padding: 3 }}>
-              {["encrypt", "decrypt"].map(m => (
-                <button key={m} onClick={() => { setMode(m); setOutput(""); setError(""); }} style={{
+              {[
+                { key: "encrypt", icon: "fa-solid fa-lock", label: "ENCRYPT" },
+                { key: "decrypt", icon: "fa-solid fa-lock-open", label: "DECRYPT" }
+              ].map(m => (
+                <button key={m.key} onClick={() => { setMode(m.key); setOutput(""); setError(""); }} style={{
                   flex: 1, padding: "8px 0", border: "none", borderRadius: 6, cursor: "pointer",
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
-                  background: mode === m ? "rgba(0,255,170,0.1)" : "transparent",
-                  color: mode === m ? "#00ffaa" : "#555"
-                }}>{m}</button>
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 1,
+                  background: mode === m.key ? "rgba(0,255,170,0.1)" : "transparent",
+                  color: mode === m.key ? "#00ffaa" : "#555",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                }}>
+                  <i className={m.icon} style={{ fontSize: 10 }} /> {m.label}
+                </button>
               ))}
             </div>
 
@@ -353,7 +366,7 @@ function DemoPage() {
               style={styles.input}
             />
 
-            {error && <div style={styles.error}>{error}</div>}
+            {error && <div style={styles.error}><i className="fa-solid fa-circle-exclamation" style={{ marginRight: 6 }} />{error}</div>}
 
             <button
               onClick={mode === "encrypt" ? handleEncrypt : handleDecrypt}
@@ -362,10 +375,14 @@ function DemoPage() {
             >
               {processing ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ display: "inline-block", animation: "lockSpin 1s linear infinite" }}>⟳</span>
+                  <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 12 }} />
                   Processing...
                 </span>
-              ) : mode === "encrypt" ? "Encrypt →" : "Decrypt →"}
+              ) : mode === "encrypt" ? (
+                <span>Encrypt <i className="fa-solid fa-arrow-right" style={{ marginLeft: 4, fontSize: 12 }} /></span>
+              ) : (
+                <span>Decrypt <i className="fa-solid fa-arrow-right" style={{ marginLeft: 4, fontSize: 12 }} /></span>
+              )}
             </button>
 
             {output && (
@@ -375,7 +392,7 @@ function DemoPage() {
                   <code style={{ fontSize: 11, wordBreak: "break-all", lineHeight: 1.6 }}>{output}</code>
                 </div>
                 <button onClick={() => navigator.clipboard?.writeText(output)} style={styles.copyBtn}>
-                  Copy to Clipboard
+                  <i className="fa-regular fa-copy" style={{ marginRight: 6 }} /> Copy to Clipboard
                 </button>
               </div>
             )}
@@ -386,10 +403,7 @@ function DemoPage() {
         <div style={{ flex: "1 1 380px", minWidth: 320 }}>
           <NetworkMonitor events={netEvents} />
           <div style={styles.proofBanner}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" stroke="#00ffaa" strokeWidth="1.5" />
-              <path d="M9 12l2 2 4-4" stroke="#00ffaa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <i className="fa-solid fa-shield-check" style={{ fontSize: 18, color: "#00ffaa", flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#00ffaa", marginBottom: 2 }}>PRIVACY VERIFIED</div>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#555" }}>
@@ -413,54 +427,36 @@ function DocsPage() {
 
       {[
         {
-          title: "Encryption Specification",
-          content: `Secrets Vault uses AES-256-GCM symmetric encryption through the Web Crypto API (SubtleCrypto interface). Every encrypt operation generates a cryptographically random 16-byte salt and 12-byte initialization vector. The user's passphrase is never stored — it's fed into PBKDF2 with 100,000 iterations of SHA-256 to derive a 256-bit AES key. The output is a base64-encoded blob containing [salt || iv || ciphertext + auth tag].`
+          icon: "fa-solid fa-gears",
+          title: "How the Encryption Works",
+          content: "When you type your secret and hit encrypt, three things happen instantly — all inside your browser:\n\n1. A unique key gets created.\nYour passphrase gets mixed with a random value to generate a one-of-a-kind encryption key. Even if you use the same passphrase twice, the key is never the same.\n\n2. Your secret gets scrambled.\nThe key locks your secret into an unreadable string of random characters. Without the exact passphrase, that string means nothing to anyone.\n\n3. The key disappears.\nThe moment encryption is done, the key is gone. It's never saved, never stored, never written anywhere. Only your passphrase can recreate it."
         },
         {
+          icon: "fa-solid fa-eye",
           title: "Zero-Trust Verification",
-          content: `The core claim — "nothing leaves your machine" — is independently verifiable. Open your browser's DevTools, navigate to the Network tab, clear it, then perform an encrypt/decrypt operation. You will observe exactly zero outbound HTTP requests. The application has no fetch(), no XMLHttpRequest, no WebSocket, no beacon, no image pings. The entire application is static HTML + JS with no server component.`
+          content: "The core claim — \"nothing leaves your machine\" — is independently verifiable. Open your browser's DevTools, navigate to the Network tab, clear it, then perform an encrypt/decrypt operation. You will observe exactly zero outbound HTTP requests. The application has no fetch(), no XMLHttpRequest, no WebSocket, no beacon, no image pings. The entire application is static HTML + JS with no server component."
         },
         {
+          icon: "fa-solid fa-triangle-exclamation",
           title: "Threat Model",
-          content: `Secrets Vault protects against network-level exfiltration and server-side data collection. It does NOT protect against: compromised browser extensions reading DOM content, physical access to an unlocked machine, keyloggers or OS-level malware, or weak passphrases vulnerable to brute force. For production secret management at scale, pair with hardware security modules (HSMs) or established tools like HashiCorp Vault.`
+          content: "Secrets Vault protects against network-level exfiltration and server-side data collection. It does NOT protect against: compromised browser extensions reading DOM content, physical access to an unlocked machine, keyloggers or OS-level malware, or weak passphrases vulnerable to brute force. For production secret management at scale, pair with hardware security modules (HSMs) or established tools like HashiCorp Vault."
         },
         {
-          title: "API (Programmatic Usage)",
-          code: `import { encryptSecret, decryptSecret } from './vault.js';
-
-// Encrypt
-const ciphertext = await encryptSecret(
-  "sk-proj-abc123",  // your secret
-  "strong-passphrase" // your key
-);
-
-// Decrypt
-const plaintext = await decryptSecret(
-  ciphertext,         // encrypted blob
-  "strong-passphrase" // same key
-);`
+          icon: "fa-solid fa-terminal",
+          title: "Under the Hood",
+          code: "def decrypt_vault(file_bytes: bytes, password: str) -> dict[str, Any]:\n    if not file_bytes.startswith(MAGIC):\n        raise ValueError(\"invalid vault file\")\n    offset = len(MAGIC)\n    salt, verifier_stored, iv, ct_len = struct.unpack(\n        \">16s32s12sI\", file_bytes[offset : offset + 64]\n    )\n    offset += 64\n    ciphertext = file_bytes[offset : offset + ct_len]\n    if not secrets.compare_digest(\n        _password_verifier(password, salt), verifier_stored\n    ):\n        raise WrongPasswordError(\"incorrect master password\")\n    key = _pbkdf2(password, salt)\n    try:\n        payload = AESGCM(key).decrypt(iv, ciphertext, None)\n    except Exception as exc:\n        raise WrongPasswordError(\"decryption failed\") from exc\n    return json.loads(payload.decode(\"utf-8\"))"
         },
         {
+          icon: "fa-solid fa-rocket",
           title: "Build & Deploy",
-          code: `# Clone the repository
-git clone https://github.com/gide-gnomi/secrets-vault.git
-cd secrets-vault
-
-# Install dependencies
-npm install
-
-# Development
-npm run dev
-
-# Build static site (zero-server deployment)
-npm run build
-
-# Deploy anywhere — Vercel, Netlify, GitHub Pages
-# No environment variables needed. No backend.`
+          code: "# Clone the repository\ngit clone https://github.com/gide-gnomi/secrets-vault.git\ncd secrets-vault\n\n# Install dependencies\nnpm install\n\n# Development\nnpm run dev\n\n# Deploy anywhere — Vercel, Netlify, GitHub Pages\n# No environment variables needed. No backend."
         }
       ].map((s, i) => (
         <div key={i} style={styles.docSection}>
-          <h3 style={styles.docTitle}>{s.title}</h3>
+          <h3 style={styles.docTitle}>
+            <i className={s.icon} style={{ marginRight: 10, fontSize: 14, color: "#00ffaa", opacity: 0.7 }} />
+            {s.title}
+          </h3>
           {s.content && <p style={styles.docText}>{s.content}</p>}
           {s.code && (
             <pre style={styles.codeBlock}><code>{s.code}</code></pre>
@@ -477,31 +473,33 @@ function AboutPage() {
   return (
     <div style={{ padding: "100px 24px 60px", maxWidth: 720, margin: "0 auto", animation: "fadeUp 0.5s ease" }}>
       <div style={styles.sectionLabel}>ABOUT THE PROJECT</div>
-      <h2 style={{ ...styles.sectionTitle, textAlign: "left" }}>Built for GIDE × GNOMI</h2>
-
-      <div style={{ ...styles.docSection, borderLeft: "2px solid #00ffaa", paddingLeft: 20 }}>
-        <p style={{ ...styles.docText, fontStyle: "italic", color: "#999" }}>
-          "GNOMI works to break down language barriers and create a space for the free flow of ideas, upholding the right to access information."
-        </p>
-        <p style={{ ...styles.docText, fontSize: 11, color: "#444", marginTop: 8 }}>— gnomi.com/about-us</p>
-      </div>
+      <h2 style={{ ...styles.sectionTitle, textAlign: "left" }}>Built from GIDE</h2>
 
       <div style={styles.docSection}>
-        <h3 style={styles.docTitle}>Why Secrets Vault?</h3>
+        <h3 style={styles.docTitle}>
+          <i className="fa-solid fa-question" style={{ marginRight: 10, fontSize: 14, color: "#00ffaa", opacity: 0.7 }} />
+          Why Secrets Vault?
+        </h3>
         <p style={styles.docText}>
-          GNOMI's brand is built on transparency and trust. Secrets Vault extends that ethos to developer tooling — proving that privacy claims can be verifiable, not just marketable. In a landscape where "we take your privacy seriously" is often meaningless, this project lets you open DevTools and see the truth for yourself.
+          Secrets Vault is built on transparency and trust. It extends that ethos to developer tooling — proving that privacy claims can be verifiable, not just marketable. In a landscape where "we take your privacy seriously" is often meaningless, this project lets you open DevTools and see the truth for yourself.
         </p>
       </div>
 
       <div style={styles.docSection}>
-        <h3 style={styles.docTitle}>The Privacy-First Narrative</h3>
+        <h3 style={styles.docTitle}>
+          <i className="fa-solid fa-fingerprint" style={{ marginRight: 10, fontSize: 14, color: "#00ffaa", opacity: 0.7 }} />
+          The Privacy-First Narrative
+        </h3>
         <p style={styles.docText}>
           Every design decision reinforces a single message: your data belongs to you. No analytics. No telemetry. No server. Not because we promise — because the architecture makes it impossible to break that promise. The network monitor isn't a gimmick. It's the proof.
         </p>
       </div>
 
       <div style={styles.docSection}>
-        <h3 style={styles.docTitle}>Tech Stack</h3>
+        <h3 style={styles.docTitle}>
+          <i className="fa-solid fa-layer-group" style={{ marginRight: 10, fontSize: 14, color: "#00ffaa", opacity: 0.7 }} />
+          Tech Stack
+        </h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
           {["React", "Web Crypto API", "AES-256-GCM", "PBKDF2", "SHA-256", "Zero Dependencies", "Static Deploy"].map(t => (
             <span key={t} style={styles.techTag}>{t}</span>
@@ -510,22 +508,25 @@ function AboutPage() {
       </div>
 
       <div style={styles.docSection}>
-        <h3 style={styles.docTitle}>Project Context</h3>
+        <h3 style={styles.docTitle}>
+          <i className="fa-solid fa-bullseye" style={{ marginRight: 10, fontSize: 14, color: "#00ffaa", opacity: 0.7 }} />
+          Project Context
+        </h3>
         <p style={styles.docText}>
-          This project was developed as Topic 3 of the GIDE internship program in partnership with GNOMI. It was selected for its low-risk, high-impact profile — a clean, finishable deliverable with a compelling "privacy-first" narrative that directly aligns with GNOMI's mission of transparency and information freedom.
+          This project was developed for the GIDE Hackathon in partnership with New York Tech Week. It was selected for its low-risk, high-impact profile — a clean, finishable deliverable with a compelling "privacy-first" narrative that directly aligns with GIDE's mission of transparency and information freedom.
         </p>
       </div>
 
       <div style={{ display: "flex", gap: 16, marginTop: 40, flexWrap: "wrap" }}>
         <a href="https://www.gnomi.com/en/home" target="_blank" rel="noopener" style={styles.linkCard}>
-          <span style={{ fontSize: 18 }}>🌐</span>
+          <i className="fa-solid fa-globe" style={{ fontSize: 18, color: "#00ffaa" }} />
           <div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#eee" }}>GNOMI</div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#555" }}>gnomi.com</div>
           </div>
         </a>
         <a href="https://github.com/gide-gnomi/secrets-vault" target="_blank" rel="noopener" style={styles.linkCard}>
-          <span style={{ fontSize: 18 }}>📦</span>
+          <i className="fa-brands fa-github" style={{ fontSize: 18, color: "#00ffaa" }} />
           <div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#eee" }}>Repository</div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#555" }}>github.com</div>
@@ -543,7 +544,7 @@ function Footer() {
     <footer style={styles.footer}>
       <div style={{ width: 40, height: 1, background: "#1a1a1a", margin: "0 auto 20px" }} />
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#333", letterSpacing: 1 }}>
-        SECRETS VAULT — GIDE × GNOMI — 2026
+        SECRETS VAULT — GIDE — 2026
       </p>
       <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#2a2a2a", marginTop: 4 }}>
         Privacy by architecture, not by promise.
@@ -638,7 +639,7 @@ const styles = {
     background: "#0a0a0a", border: "1px solid #141414", borderRadius: 12,
     padding: 28, animation: "fadeUp 0.5s ease both",
   },
-  featureIcon: { fontSize: 24, marginBottom: 16 },
+  featureIcon: { marginBottom: 16 },
   featureTitle: {
     fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600,
     color: "#eee", marginBottom: 8, letterSpacing: -0.3,
@@ -652,7 +653,7 @@ const styles = {
   },
   stepNum: {
     fontFamily: "'JetBrains Mono', monospace", fontSize: 32, fontWeight: 700,
-    color: "rgba(0,255,170,0.15)", marginBottom: 12,
+    color: "#00ffaa", lineHeight: 1, flexShrink: 0,
   },
   demoCard: {
     background: "#0a0a0a", border: "1px solid #141414", borderRadius: 12, padding: 28,
@@ -715,10 +716,11 @@ const styles = {
   docTitle: {
     fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 600,
     color: "#eee", marginBottom: 12, letterSpacing: -0.3,
+    display: "flex", alignItems: "center",
   },
   docText: {
     fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#777",
-    lineHeight: 1.8,
+    lineHeight: 1.8, whiteSpace: "pre-line",
   },
   codeBlock: {
     background: "#0a0a0a", border: "1px solid #141414", borderRadius: 10,

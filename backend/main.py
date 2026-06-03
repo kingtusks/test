@@ -102,8 +102,8 @@ class VaultService:
         if not VAULT_FILE.is_file():
             self._vault = create_empty_vault()
             self._password = master_password
-            self._save()
             self._unlocked = True
+            self._save()
             return
         self._vault = decrypt_vault(VAULT_FILE.read_bytes(), master_password)
         self._password = master_password
