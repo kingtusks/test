@@ -1,14 +1,15 @@
-
 from __future__ import annotations
 
 import json
-import os
-import urllib.error
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.tools import tool
 import urllib.request
+import urllib.error
 
-VAULT_API = os.environ.get("VAULT_API", "http://127.0.0.1:8080/api/v1")
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/v1/chat/completions")
-MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
+VAULT_API = "http://127.0.0.1:8080/api/v1"
+OLLAMA_URL = "http://127.0.0.1:11434"
+MODEL = "qwen2.5-coder:3b"
 
 SYSTEM = """You are GIDE Secrets Agent. You help the user manage secrets stored in a local encrypted vault.
 Rules:
@@ -17,39 +18,6 @@ Rules:
 - If tools return 403, tell the user to unlock the vault in the UI first.
 - Do not claim you called external APIs. Everything is localhost only.
 - When returning a secret value, warn: copy it locally and lock the vault when done."""
-
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "list_secrets",
-            "description": "List secrets in the vault (names and types only, no values).",
-            "parameters": {"type": "object", "properties": {}},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_secret_by_name",
-            "description": "Get full secret including value by human-readable name (case-insensitive).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "Secret name, e.g. OpenAI"},
-                },
-                "required": ["name"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "privacy_audit",
-            "description": "Return GIDE privacy audit JSON proving local-only operation.",
-            "parameters": {"type": "object", "properties": {}},
-        },
-    },
-]
 
 
 def _http(method: str, path: str, body: dict | None = None) -> tuple[int, str]:
@@ -66,93 +34,78 @@ def _http(method: str, path: str, body: dict | None = None) -> tuple[int, str]:
         return e.code, e.read().decode()
 
 
-def run_tool(name: str, arguments: dict) -> str:
-    if name == "list_secrets":
-        code, text = _http("GET", "/secrets")
-        return json.dumps({"status": code, "body": json.loads(text) if text else None})
-
-    if name == "privacy_audit":
-        code, text = _http("GET", "/privacy/audit")
-        return json.dumps({"status": code, "body": json.loads(text) if text else None})
-
-    if name == "get_secret_by_name":
-        secret_name = (arguments.get("name") or "").strip().lower()
-        code, text = _http("GET", "/secrets")
-        if code == 403:
-            return json.dumps({"error": "vault is locked — unlock in the UI first"})
-        if code != 200:
-            return json.dumps({"status": code, "body": text})
-        items = json.loads(text)
-        for item in items:
-            if item.get("name", "").lower() == secret_name:
-                sid = item["id"]
-                c2, t2 = _http("GET", f"/secrets/{sid}")
-                return json.dumps({"status": c2, "body": json.loads(t2) if t2 else None})
-        return json.dumps({"error": f"no secret named {arguments.get('name')}"})
-
-    return json.dumps({"error": f"unknown tool {name}"})
+@tool
+def list_secrets() -> str:
+    """List secrets in the vault (names and types only, no values)."""
+    code, text = _http("GET", "/secrets")
+    return json.dumps({"status": code, "body": json.loads(text) if text else None})
 
 
-def ollama_chat(messages: list) -> dict:
-    payload = {
-        "model": MODEL,
-        "messages": messages,
-        "tools": TOOLS,
-        "stream": False,
-    }
-    req = urllib.request.Request(
-        OLLAMA_URL,
-        data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return json.loads(resp.read().decode())
+@tool
+def get_secret_by_name(name: str) -> str:
+    """Get full secret including value by human-readable name (case-insensitive)."""
+    secret_name = name.strip().lower()
+    code, text = _http("GET", "/secrets")
+    if code == 403:
+        return json.dumps({"error": "vault is locked — unlock in the UI first"})
+    if code != 200:
+        return json.dumps({"status": code, "body": text})
+    items = json.loads(text)
+    for item in items:
+        if item.get("name", "").lower() == secret_name:
+            sid = item["id"]
+            c2, t2 = _http("GET", f"/secrets/{sid}")
+            return json.dumps({"status": c2, "body": json.loads(t2) if t2 else None})
+    return json.dumps({"error": f"no secret named {name}"})
 
 
-def agent_turn(messages: list) -> tuple[str, list]:
-    """One user message → possibly multiple tool rounds → final assistant text."""
+@tool
+def privacy_audit() -> str:
+    """Return GIDE privacy audit JSON proving local-only operation."""
+    code, text = _http("GET", "/privacy/audit")
+    return json.dumps({"status": code, "body": json.loads(text) if text else None})
+
+
+TOOLS = [list_secrets, get_secret_by_name, privacy_audit]
+TOOLS_BY_NAME = {t.name: t for t in TOOLS}
+
+
+def agent_turn(llm_with_tools, messages: list) -> tuple[str, list]:
     for _ in range(8):
-        data = ollama_chat(messages)
-        msg = data["choices"][0]["message"]
-        tool_calls = msg.get("tool_calls") or []
+        response = llm_with_tools.invoke(messages)
+        messages.append(response)
 
-        if not tool_calls:
-            content = msg.get("content") or ""
-            messages.append({"role": "assistant", "content": content})
-            return content, messages
+        if not response.tool_calls:
+            return response.content, messages
 
-        messages.append(msg)
-        for tc in tool_calls:
-            fn = tc["function"]
-            args = json.loads(fn.get("arguments") or "{}")
-            result = run_tool(fn["name"], args)
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc["id"],
-                "content": result,
-            })
+        for tc in response.tool_calls:
+            tool_fn = TOOLS_BY_NAME[tc["name"]]
+            result = tool_fn.invoke(tc["args"])
+            messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
 
     return "Agent stopped after too many tool rounds.", messages
 
 
-def main() -> None:
+def run_agent() -> None:
     print("GIDE Secrets Agent (local only)")
     print(f"  Vault: {VAULT_API}")
-    print(f"  Ollama: {OLLAMA_URL} model={MODEL}")
+    print(f"  Ollama: {OLLAMA_URL}  model={MODEL}")
     print("Unlock the vault in the UI first. Type 'quit' to exit.\n")
 
-    messages = [{"role": "system", "content": SYSTEM}]
+    llm = ChatOllama(base_url=OLLAMA_URL, model=MODEL)
+    llm_with_tools = llm.bind_tools(TOOLS)
+
+    messages = [SystemMessage(content=SYSTEM)]
+
     while True:
         user = input("You: ").strip()
         if user.lower() in {"quit", "exit", "q"}:
             break
         if not user:
             continue
-        messages.append({"role": "user", "content": user})
-        reply, messages = agent_turn(messages)
+        messages.append(HumanMessage(content=user))
+        reply, messages = agent_turn(llm_with_tools, messages)
         print(f"\nAgent: {reply}\n")
 
 
-if __name__ == "__main__":
-    main()
+run_agent()
